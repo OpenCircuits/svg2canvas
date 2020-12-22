@@ -61,7 +61,6 @@ function parseStyles(element: Element): Style {
     return style;
 }
 
-
 const GeometryProperties = {
     "cx": {
         parse: (data: string) => Number.parseFloat(data),
@@ -145,16 +144,7 @@ const GeometryProperties = {
     defaultValue: (element: Element) => any
 }>;
 
-function parseAttributes(element: Element, attributes: string[]): any[] {
-    return attributes.map((attribute) => {
-        const {parse, defaultValue} = GeometryProperties[attribute];
-        const val = element.getAttribute(attribute);
-        return (val ? parse(val) : defaultValue(element)) as number;
-    });
-}
-
-
-class Drawing {
+export class Drawing {
     private children: Drawing[];
 
     private style?: Style;
@@ -194,7 +184,7 @@ class Drawing {
     }
 }
 
-class SVGDrawing {
+export class SVGDrawing {
     private children: Drawing[];
 
     private invWidth: number;
@@ -303,7 +293,7 @@ const Shapes = {
     parse: (attributes: any[]) => Path2D
 }>;
 
-function CreateDrawingFromSVG(svg?: XMLDocument): SVGDrawing | undefined {
+export function CreateDrawingFromSVG(svg?: XMLDocument): SVGDrawing | undefined {
     if (!svg)
         return undefined;
 
