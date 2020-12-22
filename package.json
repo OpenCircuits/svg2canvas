@@ -1,17 +1,35 @@
 {
   "name": "svg2canvas",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.0.1",
+  "description": "Library to allow batching and rendering of SVGs onto the canvas EFFICIENTLY. Currently only compatible w/ simple geometry.",
+  "keywords": [
+    "svg",
+    "canvas",
+    "batch",
+    "fast",
+    "2d"
+  ],
+  "homepage": "https://github.com/OpenCircuits/svg2canvas#readme",
+  "bugs": "https://github.com/OpenCircuits/svg2canvas/issues",
+  "license": "GPL-3.0",
+  "author": "Leon Montealegre <leonm99@gmail.com> (http://leonmontealeg.re/)",
+  "files": [
+    "build/*"
+  ],
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/OpenCircuits/svg2canvas.git"
+  },
   "scripts": {
+    "build-prod": "rimraf ./build && tsc --build",
     "build": "tsc --build",
     "watch": "tsc --build -w",
     "test": "cp ./tests/manual/* ./build/ && serve -port=8081 ./build/"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
+    "rimraf": "^3.0.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.1.3"
   }
