@@ -201,10 +201,11 @@ export class SVGDrawing {
         this.children.push(child);
     }
 
-    public draw(ctx: CanvasRenderingContext2D, width?: number, height?: number): void {
-        if (width != undefined || height != undefined) {
-            ctx.save();
+    public draw(ctx: CanvasRenderingContext2D, x: number = 0, y: number = 0, width?: number, height?: number): void {
+        ctx.save();
 
+        ctx.translate(x, y);
+        if (width != undefined || height != undefined) {
             const sw = width  ? width *this.invWidth  : (height! * this.invHeight);
             const sh = height ? height*this.invHeight : (width! * this.invWidth);
 
@@ -213,9 +214,7 @@ export class SVGDrawing {
 
         this.children.forEach(d => d.draw(ctx));
 
-        if (width != undefined || height != undefined) {
-            ctx.restore();
-        }
+        ctx.restore();
     }
 }
 

@@ -13,9 +13,9 @@
 
         <canvas id="canvas" width="500px" height="500px"></canvas>
 
-        <script src="./index.js"></script>
+        <script type="module">
+            import {CreateDrawingFromSVG} from "./index.js";
 
-        <script>
             const AMT = 50000;
             const AVAILABLE_IMGS = ["and", "constLow", "buttonDown", "clock", "segment_diagonaltr", "segment_horizontal", "switchDown", "switchUp", "led", "keyboard"];
 
@@ -50,7 +50,7 @@
                             const start = Date.now();
                             for (let i = 0; i < AMT; i++) {
                                 ctx.clearRect(0, 0, 500, 500);
-                                ctx.drawImage(img, 0, 0, 500, 500*img.height/img.width);
+                                ctx.drawImage(img, 50, 50, 500, 500*img.height/img.width);
                             }
                             const end = Date.now();
 
@@ -69,7 +69,7 @@
                         for (let i = 0; i < AMT; i++) {
                             ctx.clearRect(0, 0, 500, 500);
 
-                            drawing.draw(ctx, 500);
+                            drawing.draw(ctx, 50, 50, 500);
                         }
                         const end = Date.now();
 
