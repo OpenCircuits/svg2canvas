@@ -1,0 +1,150 @@
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    </head>
+    <body>
+        <button id="test1-btn">Run Test 1 – old way</button>
+        <button id="test2-btn">Run Test 2 – my way</button>
+        <button id="diff-btn">Diff</button>
+
+        <div id="imgs">
+
+        </div>
+
+        <canvas id="canvas" width="500px" height="500px"></canvas>
+
+        <script src="./index.js"></script>
+
+        <script>
+            const AMT = 50000;
+            const AVAILABLE_IMGS = ["and", "constLow", "buttonDown", "clock", "segment_diagonaltr", "segment_horizontal", "switchDown", "switchUp", "led", "keyboard"];
+
+            let curImg = AVAILABLE_IMGS[0];
+
+            const canvas = document.getElementById("canvas");
+
+            const ctx = canvas.getContext("2d");
+
+            const imgsDiv = document.getElementById("imgs");
+            AVAILABLE_IMGS.forEach((name) => {
+                const btn = document.createElement("button");
+                btn.innerHTML = name;
+                btn.onclick = () => {
+                    curImg = name;
+                }
+                imgsDiv.appendChild(btn);
+            })
+
+
+            function test1() {
+                return new Promise((resolve) => {
+                    $.get(`${curImg}.svg`, (xml) => {
+                        const str = new XMLSerializer().serializeToString(xml);
+
+                        const data = btoa(str);
+
+                        const img = new Image();
+                        img.src = `data:image/svg+xml;base64,${data}`;
+
+                        img.onload = () => {
+                            const start = Date.now();
+                            for (let i = 0; i < AMT; i++) {
+                                ctx.clearRect(0, 0, 500, 500);
+                                ctx.drawImage(img, 0, 0, 500, 500*img.height/img.width);
+                            }
+                            const end = Date.now();
+
+                            resolve(end - start);
+                        }
+                    });
+                });
+            }
+
+            function test2() {
+                return new Promise((resolve) => {
+                    $.get(`${curImg}.svg`, (xml) => {
+                        const drawing = CreateDrawingFromSVG(xml);
+
+                        const start = Date.now();
+                        for (let i = 0; i < AMT; i++) {
+                            ctx.clearRect(0, 0, 500, 500);
+
+                            drawing.draw(ctx, 500);
+                        }
+                        const end = Date.now();
+
+                        resolve(end - start);
+                    });
+                });
+            }
+
+            function diff() {
+                $.get(`${curImg}.svg`, (xml) => {
+                    const drawing = CreateDrawingFromSVG(xml);
+                    const str = new XMLSerializer().serializeToString(xml);
+
+                    const data = btoa(str);
+
+                    const img = new Image();
+                    img.src = `data:image/svg+xml;base64,${data}`;
+
+                    img.onload = () => {
+                        console.log("test");
+                        ctx.clearRect(0, 0, 500, 500);
+
+                        ctx.drawImage(img, 0, 0, 500, 500*img.height/img.width);
+                        const data1 = ctx.getImageData(0, 0, 500, 500).data.slice();
+
+                        ctx.clearRect(0, 0, 500, 500);
+
+                        drawing.draw(ctx);
+                        const data2 = ctx.getImageData(0, 0, 500, 500).data.slice();
+
+                        ctx.clearRect(0, 0, 500, 500);
+
+                        const diff = ctx.createImageData(500, 500);
+                        for (let i = 0; i < diff.data.length; i += 4) {
+                            const totalDiff = Math.abs(data1[i+0] - data2[i+0]) +
+                                              Math.abs(data1[i+1] - data2[i+1]) +
+                                              Math.abs(data1[i+2] - data2[i+2]) +
+                                              Math.abs(data1[i+3] - data2[i+3]);
+                            if (totalDiff > 10) {
+                                diff.data[i + 0] = 255;
+                                diff.data[i + 1] = 0;
+                                diff.data[i + 2] = 255;
+                                diff.data[i + 3] = 255;
+                            } else {
+                                diff.data[i + 0] = 0;
+                                diff.data[i + 1] = 0;
+                                diff.data[i + 2] = 0;
+                                diff.data[i + 3] = 0;
+                            }
+                        }
+
+                        ctx.putImageData(diff, 0, 0);
+                    }
+                });
+            }
+
+            document.getElementById("test1-btn").onclick = async () => {
+                const time = await test1();
+                console.log(`Ran test 1 with ${curImg}.svg in ${time} ms.`);
+            }
+            document.getElementById("test2-btn").onclick = async () => {
+                const time = await test2();
+                console.log(`Ran test 2 with ${curImg}.svg in ${time} ms.`);
+            }
+            document.getElementById("diff-btn").onclick = async () => {
+                diff();
+            }
+
+            // (async () => {
+            //     console.log("Test 1...");
+            //     await test1();
+
+            //     console.log("Test 2...")
+            //     await test2();
+            // })();
+        </script>
+    </body>
+</html>
