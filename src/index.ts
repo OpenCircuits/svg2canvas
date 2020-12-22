@@ -187,11 +187,17 @@ export class Drawing {
 export class SVGDrawing {
     private children: Drawing[];
 
+    public readonly width;
+    public readonly height;
+
     private invWidth: number;
     private invHeight: number;
 
     public constructor(width: number, height: number) {
         this.children = [];
+
+        this.width = width;
+        this.height = height;
 
         this.invWidth = 1.0/width;
         this.invHeight = 1.0/height;
