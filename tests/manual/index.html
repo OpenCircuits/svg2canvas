@@ -5,6 +5,8 @@
     <body>
         <button id="test1-btn">Run Test 1 – old way</button>
         <button id="test2-btn">Run Test 2 – my way</button>
+        <button id="test3-btn">Run Test 3</button>
+        <button id="test4-btn">Run Test 4</button>
         <button id="diff-btn">Diff</button>
 
         <div id="imgs">
@@ -78,6 +80,41 @@
                 });
             }
 
+            function test3() {
+                return new Promise((resolve) => {
+                    $.get(`segment_horizontal.svg`, (xml) => {
+                        const drawing = CreateDrawingFromSVG(xml);
+
+                        const start = Date.now();
+                        for (let i = 0; i < 16*10; i++) {
+                            ctx.clearRect(0, 0, 500, 500);
+
+                            drawing.draw(ctx, 50, 50, 500);
+                        }
+                        const end = Date.now();
+
+                        resolve(end - start);
+                    });
+                });
+            }
+
+            function test4() {
+                return new Promise((resolve) => {
+                    $.get(`${curImg}.svg`, (xml) => {
+                        const drawing = CreateDrawingFromSVG(xml);
+
+                        const start = Date.now();
+                        for (let i = 0; i < AMT; i++) {
+                            ctx.clearRect(0, 0, 500, 500);
+                            drawing.draw(ctx, 0, 0, 500, undefined, {r: 0x1c, g: 0xff, b: 0x3e}, 0.5);
+                        }
+                        const end = Date.now();
+
+                        resolve(end - start);
+                    });
+                });
+            }
+
             function diff() {
                 $.get(`${curImg}.svg`, (xml) => {
                     const drawing = CreateDrawingFromSVG(xml);
@@ -133,6 +170,14 @@
             document.getElementById("test2-btn").onclick = async () => {
                 const time = await test2();
                 console.log(`Ran test 2 with ${curImg}.svg in ${time} ms.`);
+            }
+            document.getElementById("test3-btn").onclick = async () => {
+                const time = await test3();
+                console.log(`Ran test 3 with ${curImg}.svg in ${time} ms.`);
+            }
+            document.getElementById("test4-btn").onclick = async () => {
+                const time = await test4();
+                console.log(`Ran test 4 with ${curImg}.svg in ${time} ms.`);
             }
             document.getElementById("diff-btn").onclick = async () => {
                 diff();

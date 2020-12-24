@@ -1,42 +1,70 @@
 
+
+// function RGB_Linear_Blend(p: number, c0: string, c1: string) {
+//     const P = 1 - p;
+
+//     const [r0,g0,b0,a0] = c0.split(",");
+//     const [r1,g1,b1,a1] = c1.split(",");
+
+//     const x = a0 || a1;
+
+//     const j = x ? ("," + (!d ? h : !h ? d : r((parseFloat(d)*P+parseFloat(h)*p)*1000)/1000+")")) : ")";
+
+// 	return"rgb"+(x?"a(":"(")+r(i(a[3]=="a"?a.slice(5):a.slice(4))*P+i(e[3]=="a"?e.slice(5):e.slice(4))*p)+","+r(i(b)*P+i(f)*p)+","+r(i(c)*P+i(g)*p)+d;
+// }
+
+
+// // WARNING! This file contains some subset of JS that is not supported by type inference.
+// // You can try checking 'Transpile to ES5' checkbox if you want the types to be inferred
+// const RGB_Linear_Blend2 = (p: number, c0: string, c1: string) => {
+//   var INT = parseInt;
+//   var ROUND = Math.round;
+//   var P = 1 - p;
+//   var [r0, g0, b0, a0] = c0.split(",");
+//   var [r1, g1, b1, a1] = c1.split(",");
+//   var alpha = a0 || a1;
+//   var swatchStyle = alpha ? "," + (!a0 ? a1 : !a1 ? a0 : ROUND((parseFloat(a0) * P + parseFloat(a1) * p) * 1000) / 1000 + ")") : ")";
+//   return "rgb" + (alpha ? "a(" : "(") + ROUND(INT(r0[3] == "a" ? r0.slice(5) : r0.slice(4)) * P + INT(r1[3] == "a" ? r1.slice(5) : r1.slice(4)) * p) + "," + ROUND(INT(g0) * P + INT(g1) * p) + "," + ROUND(INT(b0) * P + INT(b1) * p) + a0;
+// };
+
+type Color = {
+    r: number;
+    g: number;
+    b: number;
+}
+
+
+function blend({r: r1, g: g1, b: b1}: Color,
+               {r: r2, g: g2, b: b2}: Color, a: number): Color {
+    return {
+        r: r1*a + r2*(1 - a),
+        g: g1*a + g2*(1 - a),
+        b: b1*a + b2*(1 - a)
+    }
+}
+
+
+
 type Style = {
     fillStyle?: string;
-    font?: string;
+    strokeStyle?: string;
     globalAlpha?: string;
-    globalCompositeOperation?: string;
-    imageSmoothingEnabled?: string;
     lineCap?: string;
     lineDashOffset?: string;
     lineJoin?: string;
     lineWidth?: string;
     miterLimit?: string;
-    shadowBlur?: string;
-    shadowColor?: string;
-    shadowOffsetX?: string;
-    shadowOffsetY?: string;
-    strokeStyle?: string;
-    textAlign?: string;
-    textBaseline?: string;
 }
 
 const StyleNames = [
     ["fillStyle", "fill", "black"],
-    ["font", "", ""],
+    ["strokeStyle", "stroke", "none"],
     ["globalAlpha", "opacity", ""],
-    ["globalCompositeOperation", "", ""],
-    ["imageSmoothingEnabled", "", ""],
     ["lineCap", "stroke-linecap", ""],
     ["lineDashOffset", "stroke-dashoffset", ""],
     ["lineJoin", "stroke-linejoin", ""],
     ["lineWidth", "stroke-width", "1"],
     ["miterLimit", "stroke-miterlimit", ""],
-    ["shadowBlur", "", ""],
-    ["shadowColor", "", ""],
-    ["shadowOffsetX", "", ""],
-    ["shadowOffsetY", "", ""],
-    ["strokeStyle", "stroke", "none"],
-    ["textAlign", "", ""],
-    ["textBaseline", "", ""]
 ]
 
 function stylesEqual(s1: Style, s2: Style): boolean {
@@ -150,28 +178,60 @@ export class Drawing {
     private style?: Style;
     private path?: Path2D;
 
+    private fillColor?: Color;
+    private strokeColor?: Color;
+
     public constructor(style?: Style, path?: Path2D) {
         this.children = [];
         this.style = style;
         this.path = path;
+
+        const is6DigitHex = /^\#(?:[0-9A-F]{6})$/i;
+
+        if (style?.fillStyle && is6DigitHex.test(style.fillStyle)) {
+            this.fillColor = {
+                r: Number.parseInt(style.fillStyle.substr(1, 2), 16),
+                g: Number.parseInt(style.fillStyle.substr(3, 2), 16),
+                b: Number.parseInt(style.fillStyle.substr(5, 2), 16)
+            }
+            delete this.style?.fillStyle;
+        }
+        if (style?.strokeStyle && is6DigitHex.test(style.strokeStyle)) {
+            this.strokeColor = {
+                r: Number.parseInt(style.strokeStyle.substr(1, 2), 16),
+                g: Number.parseInt(style.strokeStyle.substr(3, 2), 16),
+                b: Number.parseInt(style.strokeStyle.substr(5, 2), 16)
+            }
+            delete this.style?.strokeStyle;
+        }
     }
 
-    private applyStyles(ctx: CanvasRenderingContext2D): void {
+    private applyStyles(ctx: CanvasRenderingContext2D, tint?: Color, tintAmount: number = 0.5): void {
         if (!this.style)
             return;
         Object.entries(this.style).forEach(([k, v]) => {
             if (!(k in ctx) || (ctx as any)[k] == v)
                 return;
+
             (ctx as any)[k] = v
         });
+
+        if (this.strokeColor) {
+            const col = (tint ? blend(this.strokeColor, tint, tintAmount) : this.strokeColor);
+            ctx.strokeStyle = `rgb(${col.r}, ${col.g}, ${col.b})`;
+        }
+        if (this.fillColor) {
+            const col = (tint ? blend(this.fillColor, tint, tintAmount) : this.fillColor);
+            ctx.fillStyle = `rgb(${col.r}, ${col.g}, ${col.b})`;
+        }
     }
 
     public addChild(child: Drawing): void {
         this.children.push(child);
     }
 
-    public draw(ctx: CanvasRenderingContext2D): void {
-        this.applyStyles(ctx);
+    public draw(ctx: CanvasRenderingContext2D, tint?: Color, tintAmount: number = 0.5): void {
+        this.applyStyles(ctx, tint, tintAmount);
 
         if (this.path) {
             if (this.style && this.style.fillStyle != "none")
@@ -207,7 +267,7 @@ export class SVGDrawing {
         this.children.push(child);
     }
 
-    public draw(ctx: CanvasRenderingContext2D, x: number = 0, y: number = 0, width?: number, height?: number): void {
+    public draw(ctx: CanvasRenderingContext2D, x: number = 0, y: number = 0, width?: number, height?: number, tint?: Color, tintAmount: number = 0.5): void {
         ctx.save();
 
         ctx.translate(x, y);
@@ -218,7 +278,7 @@ export class SVGDrawing {
             ctx.scale(sw, sh);
         }
 
-        this.children.forEach(d => d.draw(ctx));
+        this.children.forEach(d => d.draw(ctx, tint, tintAmount));
 
         ctx.restore();
     }
