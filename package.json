@@ -1,6 +1,6 @@
 {
   "name": "svg2canvas",
-  "version": "0.0.7",
+  "version": "0.0.10",
   "description": "Library to allow batching and rendering of SVGs onto the canvas EFFICIENTLY. Currently only compatible w/ simple geometry.",
   "keywords": [
     "svg",

@@ -1,41 +1,26 @@
 
-
-// function RGB_Linear_Blend(p: number, c0: string, c1: string) {
-//     const P = 1 - p;
-
-//     const [r0,g0,b0,a0] = c0.split(",");
-//     const [r1,g1,b1,a1] = c1.split(",");
-
-//     const x = a0 || a1;
-
-//     const j = x ? ("," + (!d ? h : !h ? d : r((parseFloat(d)*P+parseFloat(h)*p)*1000)/1000+")")) : ")";
-
-// 	return"rgb"+(x?"a(":"(")+r(i(a[3]=="a"?a.slice(5):a.slice(4))*P+i(e[3]=="a"?e.slice(5):e.slice(4))*p)+","+r(i(b)*P+i(f)*p)+","+r(i(c)*P+i(g)*p)+d;
-// }
-
-
-// // WARNING! This file contains some subset of JS that is not supported by type inference.
-// // You can try checking 'Transpile to ES5' checkbox if you want the types to be inferred
-// const RGB_Linear_Blend2 = (p: number, c0: string, c1: string) => {
-//   var INT = parseInt;
-//   var ROUND = Math.round;
-//   var P = 1 - p;
-//   var [r0, g0, b0, a0] = c0.split(",");
-//   var [r1, g1, b1, a1] = c1.split(",");
-//   var alpha = a0 || a1;
-//   var swatchStyle = alpha ? "," + (!a0 ? a1 : !a1 ? a0 : ROUND((parseFloat(a0) * P + parseFloat(a1) * p) * 1000) / 1000 + ")") : ")";
-//   return "rgb" + (alpha ? "a(" : "(") + ROUND(INT(r0[3] == "a" ? r0.slice(5) : r0.slice(4)) * P + INT(r1[3] == "a" ? r1.slice(5) : r1.slice(4)) * p) + "," + ROUND(INT(g0) * P + INT(g1) * p) + "," + ROUND(INT(b0) * P + INT(b1) * p) + a0;
-// };
-
-type Color = {
+export type Color = {
     r: number;
     g: number;
     b: number;
 }
 
+export function parseColor(col: string): Color {
+    const is6DigitHex = /^\#(?:[0-9A-F]{6})$/i;
 
-function blend({r: r1, g: g1, b: b1}: Color,
-               {r: r2, g: g2, b: b2}: Color, a: number): Color {
+    if (!is6DigitHex.test(col))
+        throw new Error("Color failed to match pattern: #DDDDDD!");
+
+    return {
+        r: Number.parseInt(col.substr(1, 2), 16),
+        g: Number.parseInt(col.substr(3, 2), 16),
+        b: Number.parseInt(col.substr(5, 2), 16)
+    }
+}
+
+
+export function blend({r: r1, g: g1, b: b1}: Color,
+                      {r: r2, g: g2, b: b2}: Color, a: number): Color {
     return {
         r: r1*a + r2*(1 - a),
         g: g1*a + g2*(1 - a),
@@ -189,19 +174,11 @@ export class Drawing {
         const is6DigitHex = /^\#(?:[0-9A-F]{6})$/i;
 
         if (style?.fillStyle && is6DigitHex.test(style.fillStyle)) {
-            this.fillColor = {
-                r: Number.parseInt(style.fillStyle.substr(1, 2), 16),
-                g: Number.parseInt(style.fillStyle.substr(3, 2), 16),
-                b: Number.parseInt(style.fillStyle.substr(5, 2), 16)
-            }
+            this.fillColor = parseColor(style.fillStyle);
             delete this.style?.fillStyle;
         }
         if (style?.strokeStyle && is6DigitHex.test(style.strokeStyle)) {
-            this.strokeColor = {
-                r: Number.parseInt(style.strokeStyle.substr(1, 2), 16),
-                g: Number.parseInt(style.strokeStyle.substr(3, 2), 16),
-                b: Number.parseInt(style.strokeStyle.substr(5, 2), 16)
-            }
+            this.strokeColor = parseColor(style.strokeStyle);
             delete this.style?.strokeStyle;
         }
     }
@@ -358,7 +335,7 @@ const Shapes = {
     parse: (attributes: any[]) => Path2D
 }>;
 
-export function CreateDrawingFromSVG(svg?: XMLDocument): SVGDrawing | undefined {
+export function CreateDrawingFromSVG(svg?: XMLDocument, globalStyle?: Style): SVGDrawing | undefined {
     if (!svg)
         return undefined;
 
@@ -392,7 +369,8 @@ export function CreateDrawingFromSVG(svg?: XMLDocument): SVGDrawing | undefined 
     // Get shape (style and path) for each node
     const shapes = nodes.map(element => {
         const type = element.nodeName;
-        const style = parseStyles(element);
+
+        const style = {...parseStyles(element), ...globalStyle};
 
         const shape = Shapes[type];
         const attributes = shape.attributes.map((attribute) => {
