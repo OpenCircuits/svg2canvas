@@ -18,6 +18,13 @@ export function parseColor(col: string): Color {
     }
 }
 
+export function ColorToHex(col: Color): string {
+    return `#${[col.r, col.g, col.b].map(x => {
+        const hex = Math.round(x).toString(16);
+        return (hex.length === 1 ? '0'+hex : hex);
+    }).join('')}`
+}
+
 
 export function blend({r: r1, g: g1, b: b1}: Color,
                       {r: r2, g: g2, b: b2}: Color, a: number): Color {
