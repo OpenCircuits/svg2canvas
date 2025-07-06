@@ -164,6 +164,17 @@ const GeometryProperties = {
     defaultValue: (element: Element) => any
 }>;
 
+export interface SVGDrawOptions {
+    tint?: {
+        color: Color;
+        amt?: number;
+    };
+    // Overrides drawing's fill if set
+    fill?: string;
+    // Overrides drawing's stroke if set
+    stroke?: string;
+}
+
 export class Drawing {
     private children: Drawing[];
 
@@ -201,12 +212,24 @@ export class Drawing {
         });
 
         if (this.strokeColor) {
-            const col = (opts?.tint ? blend(this.strokeColor, opts.tint.color, opts.tint.amt ?? 0.5) : this.strokeColor);
-            ctx.strokeStyle = `rgb(${col.r}, ${col.g}, ${col.b})`;
+            // If opts has stroke set, use that instead.
+            if (opts?.stroke) {
+                if (opts?.stroke !== "none")
+                    ctx.strokeStyle = opts?.stroke;
+            } else {
+                const col = (opts?.tint ? blend(this.strokeColor, opts.tint.color, opts.tint.amt ?? 0.5) : this.strokeColor);
+                ctx.strokeStyle = `rgb(${col.r}, ${col.g}, ${col.b})`;
+            }
         }
         if (this.fillColor) {
-            const col = (opts?.tint ? blend(this.fillColor, opts.tint.color, opts.tint.amt ?? 0.5) : this.fillColor);
-            ctx.fillStyle = `rgb(${col.r}, ${col.g}, ${col.b})`;
+            // If opts has fill set, use that instead.
+            if (opts?.fill) {
+                if (opts?.fill !== "none")
+                    ctx.fillStyle = opts?.fill;
+            } else {
+                const col = (opts?.tint ? blend(this.fillColor, opts.tint.color, opts.tint.amt ?? 0.5) : this.fillColor);
+                ctx.fillStyle = `rgb(${col.r}, ${col.g}, ${col.b})`;
+            }
         }
     }
 
@@ -218,21 +241,14 @@ export class Drawing {
         this.applyStyles(ctx, opts);
 
         if (this.path) {
-            if (this.style && this.style.fillStyle != "none")
+            if (this.style?.fillStyle != "none" && opts?.fill !== "none")
                 ctx.fill(this.path);
-            if (this.style && this.style.strokeStyle != "none")
+            if (this.style?.strokeStyle != "none" && opts?.stroke !== "none")
                 ctx.stroke(this.path);
         }
 
-        this.children.forEach(d => d.draw(ctx));
+        this.children.forEach(d => d.draw(ctx, opts));
     }
-}
-
-export interface SVGDrawOptions {
-    tint?: {
-        color: Color;
-        amt?: number;
-    };
 }
 
 export class SVGDrawing {

@@ -6,7 +6,8 @@
         <button id="test1-btn">Run Test 1 - old way</button>
         <button id="test2-btn">Run Test 2 - my way</button>
         <button id="test3-btn">Run Test 3</button>
-        <button id="test4-btn">Run Test 4</button>
+        <button id="test4-btn">Run Test 4 - tinted</button>
+        <button id="test5-btn">Run Test 5 - no fill</button>
         <button id="diff-btn">Diff</button>
 
         <div id="imgs">
@@ -18,7 +19,7 @@
         <script type="module">
             import {CreateDrawingFromSVG} from "./index.js";
 
-            const AMT = 50000;
+            const AMT = 50_000;
             const AVAILABLE_IMGS = ["and", "constLow", "buttonDown", "clock", "segment_diagonaltr", "segment_horizontal", "switchDown", "switchUp", "led", "keyboard"];
 
             let curImg = AVAILABLE_IMGS[0];
@@ -118,6 +119,24 @@
                 });
             }
 
+            function test5() {
+                // Test with fill set to none
+                return new Promise((resolve) => {
+                    $.get(`${curImg}.svg`, (xml) => {
+                        const drawing = CreateDrawingFromSVG(xml);
+
+                        const start = Date.now();
+                        for (let i = 0; i < AMT; i++) {
+                            ctx.clearRect(0, 0, 500, 500);
+                            drawing.draw(ctx, 0, 0, 500, undefined, { fill: "none" });
+                        }
+                        const end = Date.now();
+
+                        resolve(end - start);
+                    });
+                });
+            }
+
             function diff() {
                 $.get(`${curImg}.svg`, (xml) => {
                     const drawing = CreateDrawingFromSVG(xml);
@@ -180,6 +199,10 @@
             document.getElementById("test4-btn").onclick = async () => {
                 const time = await test4();
                 console.log(`Ran test 4 with ${curImg}.svg in ${time} ms.`);
+            }
+            document.getElementById("test5-btn").onclick = async () => {
+                const time = await test5();
+                console.log(`Ran test 5 with ${curImg}.svg in ${time} ms.`);
             }
             document.getElementById("diff-btn").onclick = async () => {
                 diff();
