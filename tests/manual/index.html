@@ -3,8 +3,8 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     </head>
     <body>
-        <button id="test1-btn">Run Test 1 – old way</button>
-        <button id="test2-btn">Run Test 2 – my way</button>
+        <button id="test1-btn">Run Test 1 - old way</button>
+        <button id="test2-btn">Run Test 2 - my way</button>
         <button id="test3-btn">Run Test 3</button>
         <button id="test4-btn">Run Test 4</button>
         <button id="diff-btn">Diff</button>
@@ -39,6 +39,7 @@
 
 
             function test1() {
+                // Tests normal drawing of SVG onto canvas
                 return new Promise((resolve) => {
                     $.get(`${curImg}.svg`, (xml) => {
                         const str = new XMLSerializer().serializeToString(xml);
@@ -52,7 +53,7 @@
                             const start = Date.now();
                             for (let i = 0; i < AMT; i++) {
                                 ctx.clearRect(0, 0, 500, 500);
-                                ctx.drawImage(img, 50, 50, 500, 500*img.height/img.width);
+                                ctx.drawImage(img, 0, 0, 500, 500*img.height/img.width);
                             }
                             const end = Date.now();
 
@@ -63,6 +64,7 @@
             }
 
             function test2() {
+                // Tests svg2canvas drawing of SVG onto canvas
                 return new Promise((resolve) => {
                     $.get(`${curImg}.svg`, (xml) => {
                         const drawing = CreateDrawingFromSVG(xml);
@@ -71,7 +73,7 @@
                         for (let i = 0; i < AMT; i++) {
                             ctx.clearRect(0, 0, 500, 500);
 
-                            drawing.draw(ctx, 50, 50, 500);
+                            drawing.draw(ctx, 0, 0, 500);
                         }
                         const end = Date.now();
 
@@ -99,6 +101,7 @@
             }
 
             function test4() {
+                // Test with tint
                 return new Promise((resolve) => {
                     $.get(`${curImg}.svg`, (xml) => {
                         const drawing = CreateDrawingFromSVG(xml);
@@ -106,7 +109,7 @@
                         const start = Date.now();
                         for (let i = 0; i < AMT; i++) {
                             ctx.clearRect(0, 0, 500, 500);
-                            drawing.draw(ctx, 0, 0, 500, undefined, {r: 0x1c, g: 0xff, b: 0x3e}, 0.5);
+                            drawing.draw(ctx, 0, 0, 500, undefined, { tint: { color: { r: 0x1c, g: 0xff, b: 0x3e }, amt: 0.5 } });
                         }
                         const end = Date.now();
 
@@ -126,7 +129,6 @@
                     img.src = `data:image/svg+xml;base64,${data}`;
 
                     img.onload = () => {
-                        console.log("test");
                         ctx.clearRect(0, 0, 500, 500);
 
                         ctx.drawImage(img, 0, 0, 500, 500*img.height/img.width);
@@ -182,14 +184,6 @@
             document.getElementById("diff-btn").onclick = async () => {
                 diff();
             }
-
-            // (async () => {
-            //     console.log("Test 1...");
-            //     await test1();
-
-            //     console.log("Test 2...")
-            //     await test2();
-            // })();
         </script>
     </body>
 </html>

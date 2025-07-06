@@ -190,7 +190,7 @@ export class Drawing {
         }
     }
 
-    private applyStyles(ctx: CanvasRenderingContext2D, tint?: Color, tintAmount: number = 0.5): void {
+    private applyStyles(ctx: CanvasRenderingContext2D, opts?: SVGDrawOptions): void {
         if (!this.style)
             return;
         Object.entries(this.style).forEach(([k, v]) => {
@@ -201,11 +201,11 @@ export class Drawing {
         });
 
         if (this.strokeColor) {
-            const col = (tint ? blend(this.strokeColor, tint, tintAmount) : this.strokeColor);
+            const col = (opts?.tint ? blend(this.strokeColor, opts.tint.color, opts.tint.amt ?? 0.5) : this.strokeColor);
             ctx.strokeStyle = `rgb(${col.r}, ${col.g}, ${col.b})`;
         }
         if (this.fillColor) {
-            const col = (tint ? blend(this.fillColor, tint, tintAmount) : this.fillColor);
+            const col = (opts?.tint ? blend(this.fillColor, opts.tint.color, opts.tint.amt ?? 0.5) : this.fillColor);
             ctx.fillStyle = `rgb(${col.r}, ${col.g}, ${col.b})`;
         }
     }
@@ -214,8 +214,8 @@ export class Drawing {
         this.children.push(child);
     }
 
-    public draw(ctx: CanvasRenderingContext2D, tint?: Color, tintAmount: number = 0.5): void {
-        this.applyStyles(ctx, tint, tintAmount);
+    public draw(ctx: CanvasRenderingContext2D, opts?: SVGDrawOptions): void {
+        this.applyStyles(ctx, opts);
 
         if (this.path) {
             if (this.style && this.style.fillStyle != "none")
@@ -226,6 +226,13 @@ export class Drawing {
 
         this.children.forEach(d => d.draw(ctx));
     }
+}
+
+export interface SVGDrawOptions {
+    tint?: {
+        color: Color;
+        amt?: number;
+    };
 }
 
 export class SVGDrawing {
@@ -251,7 +258,7 @@ export class SVGDrawing {
         this.children.push(child);
     }
 
-    public draw(ctx: CanvasRenderingContext2D, x: number = 0, y: number = 0, width?: number, height?: number, tint?: Color, tintAmount: number = 0.5): void {
+    public draw(ctx: CanvasRenderingContext2D, x: number = 0, y: number = 0, width?: number, height?: number, opts?: SVGDrawOptions): void {
         ctx.save();
 
         ctx.translate(x, y);
@@ -262,7 +269,7 @@ export class SVGDrawing {
             ctx.scale(sw, sh);
         }
 
-        this.children.forEach(d => d.draw(ctx, tint, tintAmount));
+        this.children.forEach(d => d.draw(ctx, opts));
 
         ctx.restore();
     }
@@ -367,7 +374,7 @@ export function CreateDrawingFromSVG(svg?: XMLDocument, globalStyle?: Style): SV
             return false;
         const type = element.nodeName;
         if (!(type in Shapes)) {
-            console.error(`Unsupported SVG node type ${type}! Please make an issue on http://github.com/OpenCircuits/svg2path2D/issues!`);
+            console.error(`Unsupported SVG node type ${type}! Please make an issue on http://github.com/OpenCircuits/svg2canvas/issues !`);
             return false;
         }
         return true;
